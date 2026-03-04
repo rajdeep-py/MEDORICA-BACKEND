@@ -4,9 +4,11 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from db import init_db
 from routes.about_us.about_us_routes import router as about_us_router
+from routes.ads.ads_routes import router as ads_router
 
 load_dotenv()
 
@@ -17,6 +19,9 @@ logging.basicConfig(
 logger = logging.getLogger("medorica_backend")
 
 app = FastAPI(title="Medorica Backend")
+
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 cors_origins_raw = os.getenv("CORS_ORIGINS", "*")
 cors_origins = [origin.strip() for origin in cors_origins_raw.split(",") if origin.strip()]
@@ -44,6 +49,7 @@ def healthcheck():
 
 
 app.include_router(about_us_router)
+app.include_router(ads_router)
 
 
 if __name__ == "__main__":
