@@ -37,6 +37,7 @@ def init_db():
 	from models.distributor.distributor_models import Distributor
 	from models.onboarding.asm_onboarding_models import AreaSalesManager
 	from models.onboarding.mr_onbooarding_models import MedicalRepresentative
+	from models.visual_ads.visual_ads_models import VisualAd
 
 	Base.metadata.create_all(bind=engine)
 
