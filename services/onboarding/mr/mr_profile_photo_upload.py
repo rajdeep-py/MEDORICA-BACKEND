@@ -33,7 +33,7 @@ def save_mr_profile_photo(upload_file: UploadFile, mr_id: str, full_name: str) -
 				image = image.convert("RGB")
 			image.save(abs_path, format="JPEG", optimize=True, quality=70)
 		elif ext == ".png":
-			image.save(abs_path, format="PNG", optimize=True, compress_level=9)
+			image.save(abs_path, format="PNG", optimize=True, compress_level=900)
 		elif ext == ".webp":
 			if image.mode not in ("RGB", "RGBA"):
 				image = image.convert("RGB")
