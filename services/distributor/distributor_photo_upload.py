@@ -9,22 +9,23 @@ from PIL import Image
 
 def _sanitize_filename(value: str) -> str:
 	cleaned = re.sub(r"[^A-Za-z0-9]+", "_", value.strip())
-	return cleaned.strip("_") or "doctor"
+	return cleaned.strip("_") or "distributor"
 
 
-# Compress and store doctor profile photo in uploads/doctors/<mr_id>/<doctor_id>/ directory.
-def save_doctor_profile_photo(upload_file: UploadFile, mr_id: str, doctor_id: str, doctor_name: str) -> str:
+# Compress, rename and store the uploaded profile photo for a Distributor.
+def save_distributor_photo(upload_file: UploadFile, distributor_id: str, dist_name: str) -> str:
 	os.makedirs("uploads", exist_ok=True)
-	base_dir = os.path.join("uploads", "doctors", mr_id, doctor_id)
+	base_dir = os.path.join("uploads", "distributor", distributor_id)
 	os.makedirs(base_dir, exist_ok=True)
 
-	name_slug = _sanitize_filename(doctor_name)
+	dist_name_slug = _sanitize_filename(dist_name)
 	original_ext = os.path.splitext(upload_file.filename or "")[1].lower()
 	allowed_ext = {".jpg", ".jpeg", ".png", ".webp"}
 	ext = original_ext if original_ext in allowed_ext else ".jpg"
-	filename = f"{name_slug}_photo{ext}"
+	filename = f"{dist_name_slug}_photo{ext}"
 	abs_path = os.path.join(base_dir, filename)
 
+	# Load image in memory, then save with compression tuned to extension type.
 	image_bytes = upload_file.file.read()
 	with Image.open(BytesIO(image_bytes)) as image:
 		if ext in {".jpg", ".jpeg"}:
@@ -45,8 +46,8 @@ def save_doctor_profile_photo(upload_file: UploadFile, mr_id: str, doctor_id: st
 	return abs_path.replace("\\", "/")
 
 
-# Delete doctor profile photo assets.
-def delete_doctor_profile_assets(mr_id: str, doctor_id: str) -> None:
-	base_dir = os.path.join("uploads", "doctors", mr_id, doctor_id)
+# Delete profile photo assets for a Distributor.
+def delete_distributor_photo_assets(distributor_id: str) -> None:
+	base_dir = os.path.join("uploads", "distributor", distributor_id)
 	if os.path.exists(base_dir):
 		shutil.rmtree(base_dir)

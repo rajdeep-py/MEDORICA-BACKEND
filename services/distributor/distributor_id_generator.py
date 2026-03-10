@@ -12,6 +12,6 @@ def _extract_10_digit_phone(phone_no: str) -> str:
 	return digits
 
 
-# Generate doctor ID in format: DOC + 10 digit phone number.
-def generate_doctor_id(phone_no: str) -> str:
-	return f"DOC{_extract_10_digit_phone(phone_no)}"
+# Generate Distributor ID in the format: DIST + 10 digit phone number.
+def generate_distributor_id(phone_no: str) -> str:
+	return f"DIST{_extract_10_digit_phone(phone_no)}"
