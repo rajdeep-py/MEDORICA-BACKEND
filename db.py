@@ -35,6 +35,7 @@ def get_db():
 def init_db():
 	from models.about_us.about_us_models import AboutUs
 	from models.attendance.asm_attendance_models import ASMAttendance
+	from models.chemist_shop.asm_chemist_shop_network_models import ASMChemistShopNetwork
 	from models.doctor_network.asm_doctor_network_models import ASMDoctorNetwork
 	from models.distributor.distributor_models import Distributor
 	from models.gift.gift_inventory_models import GiftInventory
