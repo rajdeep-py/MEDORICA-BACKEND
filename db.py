@@ -34,6 +34,7 @@ def get_db():
 # Create all registered database tables during application startup.
 def init_db():
 	from models.about_us.about_us_models import AboutUs
+	from models.appointment.asm.asm_appointment_models import ASMAppointment
 	from models.attendance.asm_attendance_models import ASMAttendance
 	from models.chemist_shop.asm_chemist_shop_network_models import ASMChemistShopNetwork
 	from models.doctor_network.asm_doctor_network_models import ASMDoctorNetwork
