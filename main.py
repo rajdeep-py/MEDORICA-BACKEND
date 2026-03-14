@@ -83,7 +83,8 @@ app.include_router(visual_ads_router)
 if __name__ == "__main__":
 	import uvicorn
 
+	host = os.getenv("HOST", "0.0.0.0")
 	port = int(os.getenv("PORT", "8000"))
-	logger.info("Starting server on 0.0.0.0:%s", port)
-	uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+	logger.info("Starting server on %s:%s", host, port)
+	uvicorn.run("main:app", host=host, port=port, reload=True)
 
