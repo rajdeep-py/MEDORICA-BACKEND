@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from db import init_db
 from routes.about_us.about_us_routes import router as about_us_router
 from routes.appointment.asm.asm_appointment_routes import router as asm_appointment_router
+from routes.appointment.mr.mr_appointment_routes import router as mr_appointment_router
 from routes.attendance.asm_attendance_routes import router as asm_attendance_router
 from routes.attendance.mr_attendance_routes import router as mr_attendance_router
 from routes.chemist_shop.asm_chemist_shop_network_routes import router as asm_chemist_shop_network_router
@@ -84,6 +85,7 @@ app.include_router(notification_router)
 app.include_router(mr_onboarding_router)
 app.include_router(team_router)
 app.include_router(visual_ads_router)
+app.include_router(mr_appointment_router)
 
 
 if __name__ == "__main__":
