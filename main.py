@@ -25,6 +25,7 @@ from routes.notification.notification_routes import router as notification_route
 from routes.order.asm_order_routes import router as asm_order_router
 from routes.order.mr_order_routes import router as mr_order_router
 from routes.salary_slip.asm_salary_slip_routes import router as asm_salary_slip_router
+from routes.salary_slip.mr_salary_slip_routes import router as mr_salary_slip_router
 from routes.onboarding.asm_onboarding_routes import router as asm_onboarding_router
 from routes.onboarding.mr_onboarding_routes import router as mr_onboarding_router
 from routes.team.team_routes import router as team_router
@@ -38,7 +39,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger("medorica_backend")
 
-app = FastAPI(title="Medorica Backend")
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+	init_db()
+	logger.info("Database initialized and tables created (if not existing).")
+	yield
+
+app = FastAPI(title="Medorica Backend", lifespan=lifespan)
 
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
@@ -55,11 +64,6 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-# Initialize database tables when the FastAPI app starts.
-def startup_event():
-	init_db()
-	logger.info("Database initialized and tables created (if not existing).")
 
 
 @app.get("/health", tags=["Health"])
@@ -85,6 +89,7 @@ app.include_router(mr_monthly_target_router)
 app.include_router(asm_order_router)
 app.include_router(mr_order_router)
 app.include_router(asm_salary_slip_router)
+app.include_router(mr_salary_slip_router)
 app.include_router(notification_router)
 app.include_router(mr_onboarding_router)
 app.include_router(team_router)

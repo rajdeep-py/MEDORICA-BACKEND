@@ -50,6 +50,7 @@ def init_db():
 	from models.order.asm_order_models import ASMOrder
 	from models.order.mr_order_models import MROrder
 	from models.salary_slip.asm_salary_slip_models import ASMSalarySlip
+	from models.salary_slip.mr_salary_slip_models import MRSalarySlip
 	from models.notification.notification_models import Notification
 	from models.onboarding.asm_onboarding_models import AreaSalesManager
 	from models.onboarding.mr_onbooarding_models import MedicalRepresentative
