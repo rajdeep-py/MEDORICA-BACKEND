@@ -165,6 +165,19 @@ def get_teams_by_asm_id(asm_id: str, db: Session = Depends(get_db)):
 	return [_build_team_get_response(record, db) for record in records]
 
 
+# New endpoint: Get teams by MR ID
+@router.get("/get-by-mr/{mr_id}", response_model=list[TeamGetResponseSchema])
+def get_teams_by_mr_id(mr_id: str, db: Session = Depends(get_db)):
+	from sqlalchemy import cast
+	from sqlalchemy.dialects.postgresql import JSONB
+	records = db.query(Team).filter(
+		cast(Team.team_members_mr_ids, JSONB).contains([mr_id])
+	).all()
+	if not records:
+		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No team found for the provided MR ID")
+	return [_build_team_get_response(record, db) for record in records]
+
+
 @router.put("/update-by/{team_id}", response_model=TeamResponseSchema)
 def update_team_by_team_id(
 	team_id: int,
