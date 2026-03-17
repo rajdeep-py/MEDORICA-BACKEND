@@ -1,63 +1,76 @@
 import os
-
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
+# Load environment variables from .env file
 load_dotenv()
 
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
+# Read from environment ONLY (no hardcoded secrets)
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
+# If DATABASE_URL exists, use it, otherwise build it
 DATABASE_URL = os.getenv(
-	"DATABASE_URL",
-	f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
+    "DATABASE_URL",
+    f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
 )
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Create engine
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True  # helps avoid stale connections
+)
+
+# Session config
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+# Base model
 Base = declarative_base()
 
 
-# Provide a database session dependency for API routes.
+# Dependency for FastAPI routes
 def get_db():
-	db = SessionLocal()
-	try:
-		yield db
-	finally:
-		db.close()
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
-# Create all registered database tables during application startup.
+# Initialize DB (create tables)
 def init_db():
-	from models.about_us.about_us_models import AboutUs
-	from models.appointment.asm.asm_appointment_models import ASMAppointment
-	from models.appointment.mr.mr_appointment_models import MRAppointment
-	from models.attendance.asm_attendance_models import ASMAttendance
-	from models.attendance.mr_attendance_models import MRAttendance
-	from models.chemist_shop.asm_chemist_shop_network_models import ASMChemistShopNetwork
-	from models.chemist_shop.mr_chemist_shop_network_models import MRChemistShopNetwork
-	from models.doctor_network.asm_doctor_network_models import ASMDoctorNetwork
-	from models.doctor_network.mr_doctor_network_models import MRDoctorNetwork
-	from models.distributor.distributor_models import Distributor
-	from models.gift.gift_inventory_models import GiftInventory
-	from models.gift.mr_gift_application_models import MRGiftApplication
-	from models.gift.asm_gift_application_models import ASMGiftApplication
-	from models.monthly_plan.monthly_plan_models import MonthlyPlan
-	from models.monthly_target.asm_monthly_target_models import ASMMonthlyTarget
-	from models.monthly_target.mr_monthly_target_models import MRMonthlyTarget
-	from models.order.asm_order_models import ASMOrder
-	from models.order.mr_order_models import MROrder
-	from models.salary_slip.asm_salary_slip_models import ASMSalarySlip
-	from models.salary_slip.mr_salary_slip_models import MRSalarySlip
-	from models.notification.notification_models import Notification
-	from models.onboarding.asm_onboarding_models import AreaSalesManager
-	from models.onboarding.mr_onbooarding_models import MedicalRepresentative
-	from models.team.team_models import Team
-	from models.visual_ads.visual_ads_models import VisualAd
+    from models.about_us.about_us_models import AboutUs
+    from models.appointment.asm.asm_appointment_models import ASMAppointment
+    from models.appointment.mr.mr_appointment_models import MRAppointment
+    from models.attendance.asm_attendance_models import ASMAttendance
+    from models.attendance.mr_attendance_models import MRAttendance
+    from models.chemist_shop.asm_chemist_shop_network_models import ASMChemistShopNetwork
+    from models.chemist_shop.mr_chemist_shop_network_models import MRChemistShopNetwork
+    from models.doctor_network.asm_doctor_network_models import ASMDoctorNetwork
+    from models.doctor_network.mr_doctor_network_models import MRDoctorNetwork
+    from models.distributor.distributor_models import Distributor
+    from models.gift.gift_inventory_models import GiftInventory
+    from models.gift.mr_gift_application_models import MRGiftApplication
+    from models.gift.asm_gift_application_models import ASMGiftApplication
+    from models.monthly_plan.monthly_plan_models import MonthlyPlan
+    from models.monthly_target.asm_monthly_target_models import ASMMonthlyTarget
+    from models.monthly_target.mr_monthly_target_models import MRMonthlyTarget
+    from models.order.asm_order_models import ASMOrder
+    from models.order.mr_order_models import MROrder
+    from models.salary_slip.asm_salary_slip_models import ASMSalarySlip
+    from models.salary_slip.mr_salary_slip_models import MRSalarySlip
+    from models.notification.notification_models import Notification
+    from models.onboarding.asm_onboarding_models import AreaSalesManager
+    from models.onboarding.mr_onbooarding_models import MedicalRepresentative
+    from models.team.team_models import Team
+    from models.visual_ads.visual_ads_models import VisualAd
 
-	Base.metadata.create_all(bind=engine)
-
+    Base.metadata.create_all(bind=engine)
