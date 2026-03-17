@@ -34,7 +34,7 @@ class MRGiftApplicationResponseSchema(BaseModel):
 	gift_name: Optional[str] = None
 
 	class Config:
-		orm_mode = True
+		from_attributes = True
 		from_attributes = True
 
 # Helper to enrich application with related info
