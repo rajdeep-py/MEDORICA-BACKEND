@@ -44,6 +44,7 @@ def init_db():
 	from models.doctor_network.mr_doctor_network_models import MRDoctorNetwork
 	from models.distributor.distributor_models import Distributor
 	from models.gift.gift_inventory_models import GiftInventory
+	from models.gift.mr_gift_application_models import MRGiftApplication
 	from models.monthly_plan.monthly_plan_models import MonthlyPlan
 	from models.monthly_target.asm_monthly_target_models import ASMMonthlyTarget
 	from models.monthly_target.mr_monthly_target_models import MRMonthlyTarget
