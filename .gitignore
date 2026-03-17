@@ -4,6 +4,7 @@ __pycache__/
 **/__pycache__/
 *.py[cod]
 uploads/
+apk-builds/
 venv/
 .venv/
 env/

@@ -32,6 +32,8 @@ from routes.onboarding.asm_onboarding_routes import router as asm_onboarding_rou
 from routes.onboarding.mr_onboarding_routes import router as mr_onboarding_router
 from routes.team.team_routes import router as team_router
 from routes.visual_ads.visual_ads_routes import router as visual_ads_router
+from routes.app_updates.mr_app_update_routes import router as mr_app_update_router
+from routes.app_updates.asm_app_update_routes import router as asm_app_update_router
 
 load_dotenv()
 
@@ -51,7 +53,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Medorica Backend", lifespan=lifespan)
 
+
+# Ensure uploads and apk-builds folders exist
 os.makedirs("uploads", exist_ok=True)
+os.makedirs("apk-builds/mr-app", exist_ok=True)
+os.makedirs("apk-builds/asm-app", exist_ok=True)
+
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 cors_origins_raw = os.getenv("CORS_ORIGINS", "*")
@@ -65,14 +72,10 @@ app.add_middleware(
 	allow_headers=["*"],
 )
 
-
-
-
 @app.get("/health", tags=["Health"])
 # Return a simple health status response for uptime checks.
 def healthcheck():
 	return {"status": "ok", "message": "Backend is running"}
-
 
 app.include_router(asm_onboarding_router)
 app.include_router(asm_appointment_router)
@@ -98,6 +101,8 @@ app.include_router(notification_router)
 app.include_router(mr_onboarding_router)
 app.include_router(team_router)
 app.include_router(visual_ads_router)
+app.include_router(mr_app_update_router)
+app.include_router(asm_app_update_router)
 app.include_router(mr_appointment_router)
 
 
