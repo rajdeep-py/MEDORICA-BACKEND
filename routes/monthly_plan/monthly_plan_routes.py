@@ -13,6 +13,14 @@ from models.team.team_models import Team
 
 router = APIRouter(prefix="/monthly-plan", tags=["Monthly Plan"])
 
+# Update and Delete schemas
+class MonthlyPlanUpdateSchema(BaseModel):
+	status: Optional[Literal["draft", "published", "cancelled"]] = None
+	member_day_plans: Optional[list[MemberDayPlanSchema]] = None
+
+class DeleteResponseSchema(BaseModel):
+	detail: str
+
 
 class ActivitySchema(BaseModel):
 	slot: str
@@ -220,3 +228,38 @@ def get_monthly_plan_by_mr_id_and_date(mr_id: str, plan_date: date, db: Session 
 		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Monthly plan not found for MR on this date")
 
 	return mr_plan_payload
+
+# Update MonthlyPlan by ASM
+@router.put("/update/{plan_id}", response_model=MonthlyPlanResponseSchema)
+def update_monthly_plan(plan_id: int, payload: MonthlyPlanUpdateSchema, db: Session = Depends(get_db)):
+
+    record = db.query(MonthlyPlan).filter(MonthlyPlan.id == plan_id).first()
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Monthly plan not found")
+
+    team = _get_team_or_404(record.team_id, db)
+    _validate_asm_leads_team(record.asm_id, team, db)
+
+    if payload.status:
+        record.status = payload.status
+    if payload.member_day_plans is not None:
+        _validate_member_payload(team, payload.member_day_plans, db)
+        record.member_day_plans = [member.model_dump() for member in payload.member_day_plans]
+
+    db.commit()
+    db.refresh(record)
+    return record
+
+# Delete MonthlyPlan by ASM
+@router.delete("/delete/{plan_id}", response_model=DeleteResponseSchema)
+def delete_monthly_plan(plan_id: int, db: Session = Depends(get_db)):
+    record = db.query(MonthlyPlan).filter(MonthlyPlan.id == plan_id).first()
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Monthly plan not found")
+
+    team = _get_team_or_404(record.team_id, db)
+    _validate_asm_leads_team(record.asm_id, team, db)
+
+    db.delete(record)
+    db.commit()
+    return {"detail": "Monthly plan deleted successfully"}
