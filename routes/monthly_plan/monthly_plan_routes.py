@@ -38,18 +38,20 @@ class MemberDayPlanSchema(BaseModel):
 class MonthlyPlanCreateSchema(BaseModel):
 	asm_id: str
 	team_id: int
+	mr_id: str
 	plan_date: date
 	status: Literal["draft", "published", "cancelled"] = "draft"
-	member_day_plans: list[MemberDayPlanSchema]
+	activities: list[ActivitySchema]
 
 
 class MonthlyPlanResponseSchema(BaseModel):
 	id: int
 	asm_id: str
 	team_id: int
+	mr_id: str
 	plan_date: date
 	status: str
-	member_day_plans: list[MemberDayPlanSchema]
+	activities: list[ActivitySchema]
 	created_at: datetime
 	updated_at: datetime
 
@@ -61,9 +63,10 @@ class MRDayPlanResponseSchema(BaseModel):
 	id: int
 	asm_id: str
 	team_id: int
+	mr_id: str
 	plan_date: date
 	status: str
-	mr_plan: MemberDayPlanSchema
+	activities: list[ActivitySchema]
 	created_at: datetime
 	updated_at: datetime
 
@@ -140,13 +143,20 @@ def _validate_member_payload(team: Team, member_day_plans: list[MemberDayPlanSch
 def create_monthly_plan(payload: MonthlyPlanCreateSchema, db: Session = Depends(get_db)):
 	team = _get_team_or_404(payload.team_id, db)
 	_validate_asm_leads_team(payload.asm_id, team, db)
-	_validate_member_payload(team, payload.member_day_plans, db)
+	# Validate MR is in team
+	if payload.mr_id not in (team.team_members_mr_ids if isinstance(team.team_members_mr_ids, list) else []):
+		raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"MR {payload.mr_id} is not a member of team {team.team_id}")
+	# Validate MR exists
+	mr_record = db.query(MedicalRepresentative).filter(MedicalRepresentative.mr_id == payload.mr_id).first()
+	if not mr_record:
+		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MR not found")
 
 	existing = (
 		db.query(MonthlyPlan)
 		.filter(
 			MonthlyPlan.asm_id == payload.asm_id,
 			MonthlyPlan.team_id == payload.team_id,
+			MonthlyPlan.mr_id == payload.mr_id,
 			MonthlyPlan.plan_date == payload.plan_date,
 		)
 		.first()
@@ -154,15 +164,16 @@ def create_monthly_plan(payload: MonthlyPlanCreateSchema, db: Session = Depends(
 	if existing:
 		raise HTTPException(
 			status_code=status.HTTP_400_BAD_REQUEST,
-			detail="A plan already exists for this ASM, team, and date",
+			detail="A plan already exists for this ASM, team, MR, and date",
 		)
 
 	new_plan = MonthlyPlan(
 		asm_id=payload.asm_id,
 		team_id=payload.team_id,
+		mr_id=payload.mr_id,
 		plan_date=payload.plan_date,
 		status=payload.status,
-		member_day_plans=[member.model_dump() for member in payload.member_day_plans],
+		activities=[activity.model_dump() for activity in payload.activities],
 	)
 
 	db.add(new_plan)
@@ -192,18 +203,12 @@ def get_monthly_plans_by_mr_id(mr_id: str, db: Session = Depends(get_db)):
 
 	records = (
 		db.query(MonthlyPlan)
-		.filter(MonthlyPlan.member_day_plans.contains([{"mr_id": mr_id}]))
+		.filter(MonthlyPlan.mr_id == mr_id)
 		.order_by(MonthlyPlan.plan_date.desc())
 		.all()
 	)
 
-	result: list[dict] = []
-	for record in records:
-		mr_plan_payload = _extract_mr_plan(record, mr_id)
-		if mr_plan_payload is not None:
-			result.append(mr_plan_payload)
-
-	return result
+	return records
 
 
 @router.get("/get-by-mr/{mr_id}/date/{plan_date}", response_model=MRDayPlanResponseSchema)

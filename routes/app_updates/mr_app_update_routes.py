@@ -1,43 +1,48 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
+
+
 import os
-import re
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse, JSONResponse
 
 router = APIRouter(prefix="/mr-app-updates", tags=["MR App Updates"])
 
-APK_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../apk-builds/mr-app'))
-# Debug print to verify resolved APK_DIR path
-print(f"MR APK_DIR resolved to: {APK_DIR}")
+APK_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "apk-builds", "mr-app")
 
 def get_apk_versions():
-	files = os.listdir(APK_DIR)
-	apk_pattern = re.compile(r"mr-app-(\d+)\.apk")
-	versions = []
-	for f in files:
-		m = apk_pattern.match(f)
-		if m:
-			versions.append((int(m.group(1)), f))
-	versions.sort(reverse=True)
-	return versions
+    files = []
+    if os.path.isdir(APK_DIR):
+        files = [f for f in os.listdir(APK_DIR) if f.endswith(".apk")]
+    return sorted(files)
 
-@router.get("/download/{version}", summary="Download MR app APK for specific version")
-def download_mr_app_version(version: int):
-	apk_name = f"mr-app-{version}.apk"
-	apk_path = os.path.join(APK_DIR, apk_name)
-	if not os.path.isfile(apk_path):
-		raise HTTPException(status_code=404, detail="APK not found for this version")
-	return FileResponse(apk_path, filename=apk_name, media_type="application/vnd.android.package-archive")
+@router.get("/versions")
+def get_all_versions():
+    versions = get_apk_versions()
+    return {"versions": versions}
 
-@router.get("/download/latest", summary="Download latest MR app APK")
-def download_latest_mr_app():
-	versions = get_apk_versions()
-	if not versions:
-		raise HTTPException(status_code=404, detail="No APKs found")
-	latest_version, latest_apk = versions[0]
-	apk_path = os.path.join(APK_DIR, latest_apk)
-	return FileResponse(apk_path, filename=latest_apk, media_type="application/vnd.android.package-archive")
+@router.get("/download/{filename}")
+def download_specific_apk(filename: str):
+    file_path = os.path.join(APK_DIR, filename)
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(file_path, media_type="application/vnd.android.package-archive", filename=filename)
 
-@router.get("/versions", summary="List available MR app versions")
-def list_mr_app_versions():
-	versions = get_apk_versions()
-	return {"versions": [v for v, _ in versions]}
+@router.get("/download-latest")
+def download_latest_apk():
+    versions = get_apk_versions()
+    if not versions:
+        raise HTTPException(status_code=404, detail="No APK files found")
+    latest = sorted(versions)[-1]
+    file_path = os.path.join(APK_DIR, latest)
+    return FileResponse(file_path, media_type="application/vnd.android.package-archive", filename=latest)
+
+@router.get("/latest-version")
+def get_latest_version():
+    versions = get_apk_versions()
+    if not versions:
+        return JSONResponse({"version": None, "apk_file": None, "apk_url": None})
+    latest = sorted(versions)[-1]
+    return {
+        "version": latest,
+        "apk_file": latest,
+        "apk_url": f"/mr-app-updates/download/{latest}"
+    }
