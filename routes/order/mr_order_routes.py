@@ -168,7 +168,7 @@ def create_mr_order(
         status=status,
     )
     db.add(new_order)
-    if status == "approved":
+    if status != "pending":
         _deduct_monthly_target_on_approval(db, mr_record, total_amount_rupees)
     db.commit()
     db.refresh(new_order)
@@ -220,7 +220,7 @@ def update_order_by_order_id(
     if status_value is not None:
         status = _normalize_order_status(status_value)
         record.status = status
-        if status == "approved":
+        if status != "pending":
             mr_record = db.query(MedicalRepresentative).filter(MedicalRepresentative.mr_id == record.mr_id).first()
             if mr_record:
                 _deduct_monthly_target_on_approval(db, mr_record, record.total_amount_rupees)
